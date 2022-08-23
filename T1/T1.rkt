@@ -17,9 +17,14 @@
 
 #| PARTE B |#
 ;; is-in :: TaskSchedule string -> bool
-
-
-
+;; Retorna si una tarea con nombre n está presente en el Task Schedule
+(define (is-in ts n)
+  (match ts
+    [(task v x) (equal? v n)]
+    [(parallel-tasks l r) (or (is-in l n)
+                      (is-in r n))]
+    [(serial-tasks l r) (or (is-in l n)
+                      (is-in r n))]))
 
 #| PARTE C |#
 ;; length :: TaskSchedule -> integer

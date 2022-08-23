@@ -1,7 +1,7 @@
 #lang play
 (require "T1.rkt")
 
-;; Definición
+;; Definición del caso de prueba
 
 (define my-taskschedule
   (serial-tasks
@@ -17,6 +17,11 @@
       (task "t6" 2)
       (task "t7" 1)))
     (task "t5" 6))))
+
+#| PARTE B |#
+
+(test (is-in my-taskschedule "t2") #t)
+(test (is-in my-taskschedule "collect") #f)
 
 (print-only-errors #t)
 
