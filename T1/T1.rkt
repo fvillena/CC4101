@@ -20,16 +20,20 @@
 ;; Retorna si una tarea con nombre n está presente en el Task Schedule
 (define (is-in ts n)
   (match ts
-    [(task v x) (equal? v n)]
+    [(task v _) (equal? v n)]
     [(parallel-tasks l r) (or (is-in l n)
-                      (is-in r n))]
+                              (is-in r n))]
     [(serial-tasks l r) (or (is-in l n)
-                      (is-in r n))]))
+                            (is-in r n))]))
 
 #| PARTE C |#
 ;; length :: TaskSchedule -> integer
-
-
+;; Retorna la duración total de un Task Schedule
+(define (length ts)
+  (match ts
+    [(task _ v) v]
+    [(parallel-tasks l r) (max (length l) (length r))]
+    [(serial-tasks l r) (+ (length l) (length r))]))
 
 #| PARTE D |#
 ;; width :: TaskSchedule -> integer
