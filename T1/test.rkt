@@ -35,3 +35,10 @@
 (test (length (parallel-tasks (task "t0" 4) (task "t1" 2))) 4)
 (test (length (serial-tasks (task "t0" 4) (task "t1" 2))) 6)
 (test (length my-taskschedule) 12)
+
+#| PARTE D |#
+
+(test (longest (task "t" 3)) 3)
+(test (longest (parallel-tasks (task "t0" 4) (task "t1" 2))) 4)
+(test (longest (serial-tasks (task "t0" 4) (task "t1" 2))) 4)
+(test (longest my-taskschedule) 6)

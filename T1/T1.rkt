@@ -36,12 +36,16 @@
     [(serial-tasks l r) (+ (length l) (length r))]))
 
 #| PARTE D |#
-;; width :: TaskSchedule -> integer
+;; longest :: TaskSchedule -> cons string integer
 
-
+(define (longest ts)
+  (match ts
+    [(task _ v) v]
+    [(parallel-tasks l r) (max (longest l) (longest r))]
+    [(serial-tasks l r) (max (longest l) (longest r))]))
 
 #| PARTE E |#
-;; longest :: TaskSchedule -> cons string integer
+;; sequest :: TaskSchedule -> integer
 
 
 
