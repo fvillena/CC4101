@@ -5,7 +5,8 @@
 
 #|
 <TaskSchedule> ::=  (tarea <string> <number>)
-            |  (in-node <TaskSchedule> <TaskSchedule>)
+                 |  (parallel-tasks <TaskSchedule> <TaskSchedule>)
+                 |  (serial-tasks <TaskSchedule> <TaskSchedule>)
 |#
 
 (deftype TaskSchedule
