@@ -9,6 +9,7 @@
                  |  (serial-tasks <TaskSchedule> <TaskSchedule>)
 |#
 
+;; Tipo inductivo para representar Task Schedules
 (deftype TaskSchedule
   (task name length)
   (parallel-tasks tl tr)
