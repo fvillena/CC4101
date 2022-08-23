@@ -22,6 +22,10 @@
 
 #| PARTE B |#
 
+(test (is-in (task "t" 3) "t") #t)
+(test (is-in (task "t" 3) "u") #f)
+(test (is-in (parallel-tasks (task "t0" 4) (task "t1" 2)) "t0") #t)
+(test (is-in (parallel-tasks (task "t0" 4) (task "t1" 2)) "u0") #f)
 (test (is-in my-taskschedule "t2") #t)
 (test (is-in my-taskschedule "collect") #f)
 
