@@ -37,17 +37,24 @@
 
 #| PARTE D |#
 ;; longest :: TaskSchedule -> cons string integer
-
+;; Retorna la tarea con la duración más larga
 (define (longest ts)
   (match ts
-    [(task _ v) v]
-    [(parallel-tasks l r) (max (longest l) (longest r))]
-    [(serial-tasks l r) (max (longest l) (longest r))]))
+    [(task n v) (cons n v)]
+    [(parallel-tasks l r) (if (> (cdr (longest l)) (cdr (longest r))) (longest l) (longest r))]
+    [(serial-tasks l r) (if (> (cdr (longest l)) (cdr (longest r))) (longest l) (longest r))]))
 
 #| PARTE E |#
 ;; sequest :: TaskSchedule -> integer
-
-
+;; Retorna el largo de la secuencia más larga de tareas individuales
+(define (sequest ts)
+  (match ts
+    [(task _ _) 1]
+    [(parallel-tasks l r) (max (sequest l) (sequest r))]
+    [(serial-tasks (parallel-tasks a b) (parallel-tasks c d)) (max (sequest (parallel-tasks a b)) (sequest (parallel-tasks c d)))]
+    [(serial-tasks (parallel-tasks _ _) r) (sequest r)]
+    [(serial-tasks l (parallel-tasks _ _)) (sequest l)]
+    [(serial-tasks l r) (+ (sequest l) (sequest r))]))
 
 #| PARTE F |#
 ;; end-time :: TaskSchedule string -> integer
