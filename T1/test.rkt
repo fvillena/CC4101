@@ -3,7 +3,8 @@
 
 (print-only-errors #t)
 
-;; Definición del caso de prueba
+#| PARTE A |#
+;; Definición del caso de prueba de la tarea
 
 (define my-taskschedule
   (serial-tasks
@@ -38,7 +39,27 @@
 
 #| PARTE D |#
 
-(test (longest (task "t" 3)) 3)
-(test (longest (parallel-tasks (task "t0" 4) (task "t1" 2))) 4)
-(test (longest (serial-tasks (task "t0" 4) (task "t1" 2))) 4)
-(test (longest my-taskschedule) 6)
+(test (longest (task "t" 3)) (cons "t" 3))
+(test (longest (parallel-tasks (task "t0" 4) (task "t1" 2))) (cons "t0" 4))
+(test (longest (serial-tasks (task "t0" 4) (task "t1" 2))) (cons "t0" 4))
+(check-true (or; Caso de borde cuando hay 2 tareas del mismo largo pero distinto nombre se puede devolver cualquiera
+             (equal? (longest (serial-tasks (task "t0" 4) (task "t1" 4))) (cons "t0" 4))
+             (equal? (longest (serial-tasks (task "t0" 4) (task "t1" 4))) (cons "t1" 4))))
+(test (longest my-taskschedule) (cons "t5" 6))
+
+#| PARTE E |#
+
+(test (sequest (task "t" 3)) 1)
+
+(test (sequest (parallel-tasks (task "t0" 4) (task "t1" 2))) 1)
+
+(test (sequest (parallel-tasks (serial-tasks (task "t0" 4) (task "t1" 2)) (task "t1" 2))) 2)
+(test (sequest (parallel-tasks (serial-tasks (task "t0" 4) (task "t1" 2)) (serial-tasks (task "t0" 4) (serial-tasks (task "t0" 4) (task "t1" 2))))) 3)
+
+(test (sequest (serial-tasks (task "t0" 4) (parallel-tasks (task "t1" 2) (task "t1" 2)))) 1)
+(test (sequest (serial-tasks (parallel-tasks (task "t1" 2) (task "t1" 2)) (task "t0" 4))) 1)
+(test (sequest (serial-tasks (parallel-tasks (task "t1" 2) (task "t1" 2)) (parallel-tasks (task "t1" 2) (serial-tasks (task "t0" 4) (task "t1" 2))))) 2)
+
+(test (sequest (serial-tasks (task "t0" 4) (task "t1" 2))) 2)
+(test (sequest (serial-tasks (task "t0" 4) (serial-tasks (task "t0" 4) (task "t1" 2)))) 3)
+(test (sequest my-taskschedule) 2)
