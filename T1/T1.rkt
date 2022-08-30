@@ -65,13 +65,32 @@
 ;; Ayuda respecto a la firma: el tipo de retorno
 ;; del fold debe ser (TaskSchedule -> A)
 
+(define (fold-taskschedule f g h)
+  (λ (ts)
+    (match ts
+    [(task n v) (f ts)]
+    [(parallel-tasks l r) (g 
+                             ((fold-taskschedule f g h) l)
+                             ((fold-taskschedule f g h) r))]
+    [(serial-tasks l r)   (h 
+                             ((fold-taskschedule f g h) l)
+                             ((fold-taskschedule f g h) r))])))
+
  
 #| PARTE H |#
-(define is-in2
-  void) ;; eliminie el void y complete
+
+(define (equal-n? n) (λ (x) (equal? (task-name x) n)))
+(define (my-or? l r) (or l r))
+
+(define (is-in2 n)
+  (λ (ts)
+   ((fold-taskschedule (equal-n? n) my-or? my-or?) ts)))
 
 (define length2
-   void) ;; eliminie el void y complete
+   (fold-taskschedule task-length max +)) ;; eliminie el void y complete
+
+(define (to-cons ts) (cons (task-name ts) (task-length ts)))
+(define (max-cons l r) (if (> (cdr l) (cdr r)) l r))
 
 (define longest2
-   void) ;; eliminie el void y complete
+  (fold-taskschedule to-cons max-cons max-cons)) ;; eliminie el void y complete
