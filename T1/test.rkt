@@ -63,3 +63,22 @@
 (test (sequest (serial-tasks (task "t0" 4) (task "t1" 2))) 2)
 (test (sequest (serial-tasks (task "t0" 4) (serial-tasks (task "t0" 4) (task "t1" 2)))) 3)
 (test (sequest my-taskschedule) 2)
+
+#| PARTE H |#
+
+(test ((is-in2 "t") (task "t" 3)) #t)
+(test ((is-in2 "u") (task "t" 3)) #f)
+(test ((is-in2 "t0") (parallel-tasks (task "t0" 4) (task "t1" 2))) #t)
+(test ((is-in2 "u0") (parallel-tasks (task "t0" 4) (task "t1" 2))) #f)
+(test ((is-in2 "t2") my-taskschedule) #t)
+(test ((is-in2 "collect") my-taskschedule) #f)
+
+(test (length2 (task "t" 3)) 3)
+(test (length2 (parallel-tasks (task "t0" 4) (task "t1" 2))) 4)
+(test (length2 (serial-tasks (task "t0" 4) (task "t1" 2))) 6)
+(test (length2 my-taskschedule) 12)
+
+(test (longest2 (task "t" 3)) (cons "t" 3))
+(test (longest2 (parallel-tasks (task "t0" 4) (task "t1" 2))) (cons "t0" 4))
+(test (longest2 (serial-tasks (task "t0" 4) (task "t1" 2))) (cons "t0" 4))
+(test (longest2 my-taskschedule) (cons "t5" 6))
