@@ -58,8 +58,23 @@
 
 #| PARTE F |#
 ;; end-time :: TaskSchedule string -> integer
+;; Retorna el instante de tiempo que termina la tarea t en el taskschedule ts
+(define (end-time-in ts t)
+   (match ts
+     [(task n l) #:when (is-in ts t) (task-length ts)]
+     [(task n l) (task-length ts)]
+     [(serial-tasks l r) #:when (is-in l t) (end-time-in l t)]
+     [(serial-tasks l r) #:when (is-in r t) (+ (end-time-in l t) (end-time-in r t))]
+     [(serial-tasks l r) (+ (end-time-in l t) (end-time-in r t))]
+     [(parallel-tasks l r) #:when (is-in l t) (end-time-in l t)]
+     [(parallel-tasks l r) #:when (is-in r t) (end-time-in r t)]
+     [(parallel-tasks l r) (max (end-time-in l t) (end-time-in r t))]
+     ) )
 
-
+(define (end-time ts t)
+  (if (is-in ts t)
+      (end-time-in ts t)
+      (error "no encontrado")))
 
 #| PARTE G |#
 ;; Ayuda respecto a la firma: el tipo de retorno

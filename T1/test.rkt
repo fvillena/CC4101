@@ -27,6 +27,7 @@
 (test (is-in (task "t" 3) "u") #f)
 (test (is-in (parallel-tasks (task "t0" 4) (task "t1" 2)) "t0") #t)
 (test (is-in (parallel-tasks (task "t0" 4) (task "t1" 2)) "u0") #f)
+(test (is-in (parallel-tasks (serial-tasks (task "t0" 1) (serial-tasks (task "t1" 1) (task "t2" 1))) (serial-tasks (task "t3" 1) (task "t4" 1)))  "t2") #t)
 (test (is-in my-taskschedule "t2") #t)
 (test (is-in my-taskschedule "collect") #f)
 
@@ -63,6 +64,20 @@
 (test (sequest (serial-tasks (task "t0" 4) (task "t1" 2))) 2)
 (test (sequest (serial-tasks (task "t0" 4) (serial-tasks (task "t0" 4) (task "t1" 2)))) 3)
 (test (sequest my-taskschedule) 2)
+
+#| PARTE F |#
+
+(test (end-time (task "t" 3) "t") 3)
+(test/exn (end-time (task "t" 3) "u") "no encontrado")
+(test (end-time (serial-tasks (task "t0" 1) (task "t1" 1)) "t1") 2)
+(test (end-time (serial-tasks (task "t1" 1) (task "t0" 1)) "t1") 1)
+(test (end-time (parallel-tasks (task "t0" 1) (task "t1" 1)) "t1") 1)
+(test (end-time (parallel-tasks (task "t1" 1) (task "t0" 1)) "t1") 1)
+(test (end-time (serial-tasks (task "t0" 1) (serial-tasks (task "t1" 1) (task "t2" 1))) "t1") 2)
+(test (end-time (serial-tasks (task "t0" 1) (serial-tasks (task "t1" 1) (task "t2" 1))) "t2") 3)
+(test (end-time (parallel-tasks (serial-tasks (task "t0" 1) (serial-tasks (task "t1" 1) (task "t2" 1))) (serial-tasks (task "t3" 1) (task "t4" 1)))  "t2") 3)
+(test (end-time (parallel-tasks (serial-tasks (task "t0" 1) (serial-tasks (task "t1" 1) (task "t2" 1))) (serial-tasks (task "t3" 1) (task "t4" 1)))  "t4") 2)
+(test (end-time my-taskschedule "t7") 9)
 
 #| PARTE H |#
 
