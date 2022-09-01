@@ -59,6 +59,13 @@
 #| PARTE F |#
 ;; end-time :: TaskSchedule string -> integer
 ;; Retorna el instante de tiempo que termina la tarea t en el taskschedule ts
+(define (end-time ts t)
+  (if (is-in ts t)
+      (end-time-in ts t)
+      (error "no encontrado")))
+
+;; end-time-in :: TaskSchedule string -> integer
+;; Función auxiliar que sólo se ejecuta si t está dentro de ts
 (define (end-time-in ts t)
    (match ts
      [(task n l) #:when (is-in ts t) (task-length ts)]
@@ -71,15 +78,9 @@
      [(parallel-tasks l r) (max (end-time-in l t) (end-time-in r t))]
      ) )
 
-(define (end-time ts t)
-  (if (is-in ts t)
-      (end-time-in ts t)
-      (error "no encontrado")))
-
 #| PARTE G |#
-;; Ayuda respecto a la firma: el tipo de retorno
-;; del fold debe ser (TaskSchedule -> A)
-
+;; fold-taskschedule :: (String Number -> A) (A A -> A) (TaskSchedule -> A)
+;; Captura el patrón recursivo de un task schedule
 (define (fold-taskschedule f g h)
   (λ (ts)
     (match ts
@@ -94,18 +95,22 @@
  
 #| PARTE H |#
 
+;; is-in2 :: string -> (TaskSchedule  -> bool)
+;; Retorna si una tarea con nombre n está presente en el Task Schedule
 (define (equal-n? n) (λ (x) (equal? (task-name x) n)))
 (define (my-or? l r) (or l r))
-
 (define (is-in2 n)
   (λ (ts)
    ((fold-taskschedule (equal-n? n) my-or? my-or?) ts)))
 
+;; length2 :: TaskSchedule -> Integer
+;; Retorna la duración total de un Task Schedule
 (define length2
-   (fold-taskschedule task-length max +)) ;; eliminie el void y complete
+   (fold-taskschedule task-length max +))
 
+;; longest2 :: TaskSchedule -> cons string integer
+;; Retorna la tarea con la duración más larga
 (define (to-cons ts) (cons (task-name ts) (task-length ts)))
 (define (max-cons l r) (if (> (cdr l) (cdr r)) l r))
-
 (define longest2
-  (fold-taskschedule to-cons max-cons max-cons)) ;; eliminie el void y complete
+  (fold-taskschedule to-cons max-cons max-cons))
