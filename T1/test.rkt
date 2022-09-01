@@ -79,6 +79,17 @@
 (test (end-time (parallel-tasks (serial-tasks (task "t0" 1) (serial-tasks (task "t1" 1) (task "t2" 1))) (serial-tasks (task "t3" 1) (task "t4" 1)))  "t4") 2)
 (test (end-time my-taskschedule "t7") 9)
 
+(test (end-time-in (task "t" 3) "t") 3)
+(test (end-time-in (serial-tasks (task "t0" 1) (task "t1" 1)) "t1") 2)
+(test (end-time-in (serial-tasks (task "t1" 1) (task "t0" 1)) "t1") 1)
+(test (end-time-in (parallel-tasks (task "t0" 1) (task "t1" 1)) "t1") 1)
+(test (end-time-in (parallel-tasks (task "t1" 1) (task "t0" 1)) "t1") 1)
+(test (end-time-in (serial-tasks (task "t0" 1) (serial-tasks (task "t1" 1) (task "t2" 1))) "t1") 2)
+(test (end-time-in (serial-tasks (task "t0" 1) (serial-tasks (task "t1" 1) (task "t2" 1))) "t2") 3)
+(test (end-time-in (parallel-tasks (serial-tasks (task "t0" 1) (serial-tasks (task "t1" 1) (task "t2" 1))) (serial-tasks (task "t3" 1) (task "t4" 1)))  "t2") 3)
+(test (end-time-in (parallel-tasks (serial-tasks (task "t0" 1) (serial-tasks (task "t1" 1) (task "t2" 1))) (serial-tasks (task "t3" 1) (task "t4" 1)))  "t4") 2)
+(test (end-time-in my-taskschedule "t7") 9)
+
 #| PARTE G |#
 
 (test ((fold-taskschedule identity identity identity)(task "t" 1)) (task "t" 1))
