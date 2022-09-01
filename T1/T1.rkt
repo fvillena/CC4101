@@ -97,11 +97,12 @@
 
 ;; is-in2 :: string -> (TaskSchedule  -> bool)
 ;; Retorna si una tarea con nombre n está presente en el Task Schedule
-(define (equal-n? n) (λ (x) (equal? (task-name x) n)))
-(define (my-or? l r) (or l r))
 (define (is-in2 n)
   (λ (ts)
-   ((fold-taskschedule (equal-n? n) my-or? my-or?) ts)))
+   ((fold-taskschedule
+     ((λ (n) (λ (x) (equal? (task-name x) n))) n)
+     (λ (l r) (or l r))
+     (λ (l r) (or l r))) ts)))
 
 ;; length2 :: TaskSchedule -> Integer
 ;; Retorna la duración total de un Task Schedule
@@ -110,7 +111,8 @@
 
 ;; longest2 :: TaskSchedule -> cons string integer
 ;; Retorna la tarea con la duración más larga
-(define (to-cons ts) (cons (task-name ts) (task-length ts)))
-(define (max-cons l r) (if (> (cdr l) (cdr r)) l r))
 (define longest2
-  (fold-taskschedule to-cons max-cons max-cons))
+  (fold-taskschedule
+   (λ (ts) (cons (task-name ts) (task-length ts)))
+   (λ (l r) (if (> (cdr l) (cdr r)) l r))
+   (λ (l r) (if (> (cdr l) (cdr r)) l r))))
