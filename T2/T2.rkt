@@ -7,14 +7,15 @@
 #| PARTE A |#
 
 #|
-s-Cond ::=
+Cond ::=
     | < sym num
     | > sym num
     | = sym num
-    | & s-Cond s-Cond
-    | or s-Cond s-Cond
+    | & Cond Cond
+    | or Cond Cond
 |#
-
+;; Tipo inductivo para representar
+;; filtros WHERE del lenguaje Cmd 
 (deftype Cond
   (< s n)
   (> s n)
@@ -23,36 +24,63 @@ s-Cond ::=
   (orb lc rc))
 
 #|
-s-Cmd ::=
-    CREATE <sym> (list sym) s-Cmd
-    INSERT (list sym) <sym> s-Cmd
-    FROM <sym> SELECT regs WHERE s-Cond
+Cmd ::=
+    CREATE <sym> (list sym) Cmd
+    INSERT (list sym) <sym> Cmd
+    FROM <sym> SELECT regs WHERE Cond
 |#
-
+;; Tipo inductivo para representar
+;; el lenguaje de consulta Cmd
+;; que nos pormite crear tablas, ingresar registros
+;; y finalmente consultar sobre estos registros
 (deftype Cmd
   (CREATE table-name column-names cmd)
   (INSERT row table-name cmd)
   (FROM table-name SELECT regs WHERE cond))
 
 #| PARTE B |#
-;; parse :: s-Cmd -> Cmd
 
+;; sintaxis concreta usada para escribir
+;; filtros WHERE del lenguaje Cmd
+#|
+s-Cond ::=
+    | < sym num
+    | > sym num
+    | = sym num
+    | & s-Cond s-Cond
+    | or s-Cond s-Cond
+|#
+
+;; parse-cond :: s-Cond -> Cond
+;; convierte s-Conds en Conds
+(define (parse-cond s-Cond)
+  (match s-Cond
+    [(list '= l r) (= l r)]
+    [(list '> l r) (> l r)]
+    [(list '< l r) (< l r)]
+    [(list '& l r) (& (parse-cond l) (parse-cond r))]
+    [(list 'orb l r) (orb (parse-cond l) (parse-cond r))]
+    ))
+
+;; sintaxis concreta usada para escribir
+;; el lenguaje de consulta Cmd
+;; que nos pormite crear tablas, ingresar registros
+;; y finalmente consultar sobre estos registros
+#|
+s-Cmd ::=
+    CREATE <sym> (list sym) s-Cmd
+    INSERT (list sym) <sym> s-Cmd
+    FROM <sym> SELECT regs WHERE s-Cond
+|#
+
+;; parse :: s-Cmd -> Cmd
+;; convierte s-Cmds en Cmds
 (define (parse s-Cmd)
   (match s-Cmd
     [(list 'CREATE table-name column-names cmd) (CREATE table-name column-names (parse cmd))]
     [(list 'INSERT row table-name cmd) (INSERT row table-name (parse cmd))]
-    [(list 'FROM table-name 'SELECT 'regs 'WHERE cond) (FROM table-name 'SELECT 'regs 'WHERE (parse cond))]
-    [(list '= l r) (= l r)]
-    [(list '> l r) (> l r)]
-    [(list '< l r) (< l r)]
-    [(list '& l r) (& (parse l) (parse r))]
-    [(list 'orb l r) (orb (parse l) (parse r))]
+    [(list 'FROM table-name 'SELECT 'regs 'WHERE cond) (FROM table-name 'SELECT 'regs 'WHERE (parse-cond cond))]
     ))
-
-
-(define my-s-Cmd '(CREATE A (a b c) (INSERT (1 2 3) A (INSERT (4 5 6) A (FROM A SELECT regs WHERE (& (> a 1) (< a 3)))))))
-
-(parse my-s-Cmd)
 
 #| ==============================
             EJERCICIO 2
