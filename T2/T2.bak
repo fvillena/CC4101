@@ -30,29 +30,18 @@ s-Cmd ::=
 |#
 
 (deftype Cmd
-  (CREATE table-name column-names cmd)
-  (INSERT row table-name cmd)
-  (FROM table-name SELECT regs WHERE cond))
+  (CREATE s ls c)
+  (INSERT ls s c)
+  (FROM s SELECT regs WHERE c))
 
 #| PARTE B |#
 ;; parse :: s-Cmd -> Cmd
 
 (define (parse s-Cmd)
   (match s-Cmd
-    [(list 'CREATE table-name column-names cmd) (CREATE table-name column-names (parse cmd))]
-    [(list 'INSERT row table-name cmd) (INSERT row table-name (parse cmd))]
-    [(list 'FROM table-name 'SELECT 'regs 'WHERE cond) (FROM table-name 'SELECT 'regs 'WHERE (parse cond))]
-    [(list '= l r) (= l r)]
-    [(list '> l r) (> l r)]
-    [(list '< l r) (< l r)]
-    [(list '& l r) (& (parse l) (parse r))]
-    [(list 'orb l r) (orb (parse l) (parse r))]
+    [(list 'CREATE s ls c) (let ([R ()]) (let ([table-name s]) (let ([column-names ls]) (parse c))))]
     ))
 
-
-(define my-s-Cmd '(CREATE A (a b c) (INSERT (1 2 3) A (INSERT (4 5 6) A (FROM A SELECT regs WHERE (& (> a 1) (< a 3)))))))
-
-(parse my-s-Cmd)
 
 #| ==============================
             EJERCICIO 2
