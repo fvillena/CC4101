@@ -128,8 +128,8 @@ s-Cmd ::=
 (define (check-table-with-env Cmd env)
   (match Cmd
     [(CREATE table-name column-names cmd) (check-table-with-env cmd (extend-env table-name 'dummy env))]
-    [(INSERT row table-name cmd) (if (exists-in-env? table-name env) #t (error (format "Error Estatico A1: Registro ~a insertado en tabla indefinida ~a." row table-name))) (check-table-with-env cmd env) ]
-    [(FROM table-name 'SELECT 'regs 'WHERE cond) (if (exists-in-env? table-name env) #t (error (format "Error Estatico A2: La tabla consultada ~a no se encuentra definida." table-name)))]
+    [(INSERT row table-name cmd) (if (exists-in-env? table-name env) #t (error (format "Error Estatico A1: Registro ~a insertado en tabla indefinida ~a" row table-name))) (check-table-with-env cmd env) ]
+    [(FROM table-name 'SELECT 'regs 'WHERE cond) (if (exists-in-env? table-name env) #t (error (format "Error Estatico A2: La tabla consultada ~a no se encuentra definida" table-name)))]
     ))
 
 ;; exists-in-env :: Symbol Env -> Boolean
@@ -152,7 +152,7 @@ s-Cmd ::=
 (define (check-arity-with-env Cmd env)
   (match Cmd
     [(CREATE table-name column-names cmd) (check-arity-with-env cmd (extend-env table-name column-names env))]
-    [(INSERT row table-name cmd) (if (arity-match? row table-name env) #t (error (format "Error Estatico B: Registro ~a con aridad ~a insertado en tabla ~a de aridad ~a." row (length row) table-name (length (env-lookup table-name env))))) (check-arity-with-env cmd env) ]
+    [(INSERT row table-name cmd) (if (arity-match? row table-name env) #t (error (format "Error Estatico B: Registro ~a con aridad ~a insertado en tabla ~a de aridad ~a" row (length row) table-name (length (env-lookup table-name env))))) (check-arity-with-env cmd env) ]
     [(FROM table-name 'SELECT 'regs 'WHERE cond) #t]
     ))
 
@@ -184,7 +184,7 @@ s-Cmd ::=
 ;; estén presentes en la tabla
 (define (check-cond-columns Cond table-name env)
   (match Cond
-    [(or (< s n) (> s n) (= s n)) (if (column-in-table? s table-name env) #t (error (format "Error Estático C: La columna ~a no está definida en la tabla ~a." s table-name)))]
+    [(or (< s n) (> s n) (= s n)) (if (column-in-table? s table-name env) #t (error (format "Error Estático C: La columna ~a no está definida en la tabla ~a" s table-name)))]
     [(or (orb lc rc) (& lc rc)) (check-cond-columns lc table-name env) (check-cond-columns rc table-name env)]))
 
 ;; column-in-table? :: String Symbol Env -> Boolean
