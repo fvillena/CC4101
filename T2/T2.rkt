@@ -208,9 +208,60 @@ s-Cmd ::=
    ============================== |#
 
 #| PARTE A |#
-;; interp-cmd :: Cmd Env -> List[Reg] 
 
- 
+;; interp-cmd :: Cmd Env -> List[Reg]
+;; interpreta las instrucciones de un programa en Cmd
+(define (interp-cmd Cmd env)
+  (match Cmd
+    [(CREATE table-name column-names cmd) (interp-cmd cmd
+                                                      (extend-env 'regs (list )
+                                                                  (extend-env 'table-name table-name
+                                                                              (extend-env 'column-names column-names
+                                                                                          env))))]
+    [(INSERT row table-name cmd)
+     (define new-env (extend-env 'table-name (env-lookup 'table-name env)
+                             (extend-env 'column-names (env-lookup 'column-names env)
+                                         (extend-env 'regs (append (env-lookup 'regs env) (list row))
+                                                     empty-env))))
+     (interp-cmd cmd new-env)]
+    [(FROM table-name 'SELECT 'regs 'WHERE cond) (interp-cond cond env)]
+    ))
+
+;; interp-cond :: Cond Env -> List[Reg]
+;; interpreta las condiciones Cond
+(define (interp-cond Cond env)
+  (match Cond
+    [(= s n)
+     (define i (index-of (env-lookup 'column-names env) s) )
+     (filter (lambda (e) (equal? (list-ref e i) n)) (env-lookup 'regs env))
+     ]
+    [(> s n)
+     (define i (index-of (env-lookup 'column-names env) s) )
+     (filter (lambda (e) (>= (list-ref e i) n)) (env-lookup 'regs env))
+     ]
+    [(< s n)
+     (define i (index-of (env-lookup 'column-names env) s) )
+     (filter (lambda (e) (<= (list-ref e i) n)) (env-lookup 'regs env))
+     ]
+    [(orb lc rc) (set-union (interp-cond lc env) (interp-cond rc env))]
+    [(& lc rc) (set-intersect (interp-cond lc env) (interp-cond rc env))] 
+    ))
+
+;; *código extraído de https://stackoverflow.com/questions/57813823/how-to-filter-lists-in-a-list-in-scheme*
+;; index-of :: List Void -> integer
+;; retorna el índice del elemento dentro de una lista
+(define (index-of lst ele)
+  (let loop ((lst lst)
+             (idx 0))
+    (cond ((empty? lst) #f)
+          ((equal? (first lst) ele) idx)
+          (else (loop (rest lst) (add1 idx))))))
+
 #| PARTE B |#
-;; run :: <s-Cmd> -> List[Reg] / Error
 
+;; run :: <s-Cmd> -> List[Reg] / Error
+;; realiza un análisis estático del programa y en caso de
+;; no existir errores, lo ejecuta
+(define (run Cmd)
+  (static-check Cmd)
+  (interp-cmd Cmd empty-env))

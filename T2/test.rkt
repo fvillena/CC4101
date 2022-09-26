@@ -137,3 +137,25 @@
 (test/exn (static-check (parse my-s-Cmd-ill-arity2)) "Error Estatico B: Registro (7 8 9 10 11) con aridad 5 insertado en tabla B de aridad 4")
 (test/exn (static-check (parse my-s-Cmd-ill-column)) "Error Estático C: La columna d no está definida en la tabla A")
 (test/exn (static-check (parse my-s-Cmd-ill-column2)) "Error Estático C: La columna g no está definida en la tabla B")
+
+#| ==============================
+            EJERCICIO 3
+   ============================== |#
+
+#| PARTE A |#
+
+(test (interp-cmd (parse my-s-Cmd) empty-env) '((3 5 4) (2 2 4)))
+(test (interp-cmd (parse my-s-Cmd2) empty-env) '((1 2 3)))
+
+#| PARTE B |#
+
+(test (run (parse my-s-Cmd)) '((3 5 4) (2 2 4)))
+(test (run (parse my-s-Cmd2)) '((1 2 3)))
+(test/exn (run (parse my-s-Cmd-ill-insertion)) "Error Estatico A1: Registro (1 2 3) insertado en tabla indefinida B")
+(test/exn (run (parse my-s-Cmd-ill-insertion2)) "Error Estatico A1: Registro (7 8 9) insertado en tabla indefinida C")
+(test/exn (run (parse my-s-Cmd-ill-query)) "Error Estatico A2: La tabla consultada B no se encuentra definida")
+(test/exn (run (parse my-s-Cmd-ill-query2)) "Error Estatico A2: La tabla consultada C no se encuentra definida")
+(test/exn (run (parse my-s-Cmd-ill-arity)) "Error Estatico B: Registro (1 2 3 4) con aridad 4 insertado en tabla A de aridad 3")
+(test/exn (run (parse my-s-Cmd-ill-arity2)) "Error Estatico B: Registro (7 8 9 10 11) con aridad 5 insertado en tabla B de aridad 4")
+(test/exn (run (parse my-s-Cmd-ill-column)) "Error Estático C: La columna d no está definida en la tabla A")
+(test/exn (run (parse my-s-Cmd-ill-column2)) "Error Estático C: La columna g no está definida en la tabla B")
