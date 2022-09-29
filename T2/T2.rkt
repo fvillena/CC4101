@@ -99,20 +99,21 @@ s-Cmd ::=
 ;; <env> ::= mtEnv
 ;;         | (aEnv <id> <value> <env>)
 
+;; se modificó esta estructura para que soportara un namespace
 (deftype Env
   (mtEnv)
-  (aEnv id val env))
+  (aEnv namespace id val env))
 
 (define empty-env (mtEnv))
 
 (define extend-env aEnv)
 
-(define (env-lookup x env)
+(define (env-lookup ns x env)
   (match env
     [(mtEnv) (error 'env-lookup "free identifier: ~a" x)]
-    [(aEnv id val rest) (if (symbol=? id x)
+    [(aEnv namespace id val rest) (if (and (symbol=? id x) (symbol=? namespace ns))
                             val
-                            (env-lookup x rest))]))
+                            (env-lookup ns x rest))]))
 
 #| PARTE A |#
 
@@ -127,7 +128,7 @@ s-Cmd ::=
 ;; el uso de ambientes
 (define (check-table-with-env Cmd env)
   (match Cmd
-    [(CREATE table-name column-names cmd) (check-table-with-env cmd (extend-env table-name 'dummy env))]
+    [(CREATE table-name column-names cmd) (check-table-with-env cmd (extend-env table-name 'dummy 'dummy env))]
     [(INSERT row table-name cmd) (if (exists-in-env? table-name env) #t (error (format "Error Estatico A1: Registro ~a insertado en tabla indefinida ~a" row table-name))) (check-table-with-env cmd env) ]
     [(FROM table-name 'SELECT 'regs 'WHERE cond) (if (exists-in-env? table-name env) #t (error (format "Error Estatico A2: La tabla consultada ~a no se encuentra definida" table-name)))]
     ))
@@ -136,7 +137,7 @@ s-Cmd ::=
 ;; función auxiliar que verifica si existe una
 ;; tabla en un ambiente
 (define (exists-in-env? x env)
-  (with-handlers ([exn:fail? (lambda (exn) #f)]) (env-lookup x env) #t))
+  (with-handlers ([exn:fail? (lambda (exn) #f)]) (env-lookup x 'dummy env) #t))
 
 
 #| PARTE B |#
@@ -151,8 +152,8 @@ s-Cmd ::=
 ;; el uso de ambientes
 (define (check-arity-with-env Cmd env)
   (match Cmd
-    [(CREATE table-name column-names cmd) (check-arity-with-env cmd (extend-env table-name column-names env))]
-    [(INSERT row table-name cmd) (if (arity-match? row table-name env) #t (error (format "Error Estatico B: Registro ~a con aridad ~a insertado en tabla ~a de aridad ~a" row (length row) table-name (length (env-lookup table-name env))))) (check-arity-with-env cmd env) ]
+    [(CREATE table-name column-names cmd) (check-arity-with-env cmd (extend-env 'dummy table-name column-names env))]
+    [(INSERT row table-name cmd) (if (arity-match? row table-name env) #t (error (format "Error Estatico B: Registro ~a con aridad ~a insertado en tabla ~a de aridad ~a" row (length row) table-name (length (env-lookup 'dummy table-name env))))) (check-arity-with-env cmd env) ]
     [(FROM table-name 'SELECT 'regs 'WHERE cond) #t]
     ))
 
@@ -160,7 +161,7 @@ s-Cmd ::=
 ;; función auxiliar que verifica la consistencia
 ;; de en la aridad de una nueva fila y la aridad de la tabla
 (define (arity-match? row table-name env)
-  (equal? (length (env-lookup table-name env)) (length row)))
+  (equal? (length (env-lookup 'dummy table-name env)) (length row)))
 
 #| PARTE C |#
 
@@ -174,7 +175,7 @@ s-Cmd ::=
 ;; el uso de ambientes
 (define (check-column-with-env Cmd env)
   (match Cmd
-    [(CREATE table-name column-names cmd) (check-column-with-env cmd (extend-env table-name column-names env))]
+    [(CREATE table-name column-names cmd) (check-column-with-env cmd (extend-env 'dummy table-name column-names env))]
     [(INSERT row table-name cmd) (check-column-with-env cmd env) ]
     [(FROM table-name 'SELECT 'regs 'WHERE cond) (check-cond-columns cond table-name env)]
     ))
@@ -191,7 +192,7 @@ s-Cmd ::=
 ;; función auxiliar que verifica si una columna está
 ;; en la tabla
 (define (column-in-table? column table-name env)
-  (if (member column (env-lookup table-name env)) #t #f))
+  (if (member column (env-lookup 'dummy table-name env)) #t #f))
 
 #| PARTE D |#
 
@@ -214,38 +215,38 @@ s-Cmd ::=
 (define (interp-cmd Cmd env)
   (match Cmd
     [(CREATE table-name column-names cmd) (interp-cmd cmd
-                                                      (extend-env 'regs (list )
-                                                                  (extend-env 'table-name table-name
-                                                                              (extend-env 'column-names column-names
-                                                                                          env))))]
+                                                      (extend-env table-name 'column-names column-names
+                                                                  env))]
     [(INSERT row table-name cmd)
-     (define new-env (extend-env 'table-name (env-lookup 'table-name env)
-                             (extend-env 'column-names (env-lookup 'column-names env)
-                                         (extend-env 'regs (append (env-lookup 'regs env) (list row))
-                                                     empty-env))))
+     (define new-env (extend-env table-name 'reg row env))
      (interp-cmd cmd new-env)]
-    [(FROM table-name 'SELECT 'regs 'WHERE cond) (interp-cond cond env)]
+    [(FROM table-name 'SELECT 'regs 'WHERE cond) (interp-cond table-name cond env)]
     ))
 
 ;; interp-cond :: Cond Env -> List[Reg]
 ;; interpreta las condiciones Cond
-(define (interp-cond Cond env)
+(define (interp-cond table-name Cond env)
   (match Cond
     [(= s n)
-     (define i (index-of (env-lookup 'column-names env) s) )
-     (filter (lambda (e) (equal? (list-ref e i) n)) (env-lookup 'regs env))
+     (define i (index-of (env-lookup table-name 'column-names env) s) )
+     (filter (lambda (e) (equal? (list-ref e i) n)) (reverse (all-but-last (env-lookup2 table-name 'reg env))))
      ]
     [(> s n)
      (define i (index-of (env-lookup 'column-names env) s) )
-     (filter (lambda (e) (>= (list-ref e i) n)) (env-lookup 'regs env))
+     (filter (lambda (e) (>= (list-ref e i) n)) (reverse (all-but-last (env-lookup2 table-name 'reg env))))
      ]
     [(< s n)
      (define i (index-of (env-lookup 'column-names env) s) )
-     (filter (lambda (e) (<= (list-ref e i) n)) (env-lookup 'regs env))
+     (filter (lambda (e) (<= (list-ref e i) n)) (reverse (all-but-last (env-lookup2 table-name 'reg env))))
      ]
     [(orb lc rc) (set-union (interp-cond lc env) (interp-cond rc env))]
     [(& lc rc) (set-intersect (interp-cond lc env) (interp-cond rc env))] 
     ))
+
+;; *código extraído de https://stackoverflow.com/questions/5006750/removing-last-element-of-a-listscheme*
+;; all-but-last :: List -> List
+;; elimina el último elemento de la lista
+(define (all-but-last l) (reverse (cdr (reverse l))))
 
 ;; *código extraído de https://stackoverflow.com/questions/57813823/how-to-filter-lists-in-a-list-in-scheme*
 ;; index-of :: List Void -> integer
@@ -256,6 +257,17 @@ s-Cmd ::=
     (cond ((empty? lst) #f)
           ((equal? (first lst) ele) idx)
           (else (loop (rest lst) (add1 idx))))))
+
+;; env-lookup :: Symbol Env -> List[Value]
+;; busca todos los valores que coinciden con el namespace
+;; y el identificador dado
+(define (env-lookup2 ns x env)
+  (match env
+    [(mtEnv) (list (list 'dummy ))]
+    [(aEnv namespace id val rest)(if (and (symbol=? id x) (symbol=? namespace ns))
+                            (append (list val) (env-lookup2 ns x rest))
+                            (env-lookup2 ns x rest))]
+    ))
 
 #| PARTE B |#
 

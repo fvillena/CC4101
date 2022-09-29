@@ -43,6 +43,13 @@
                                                         (CREATE B (d e f)
                                                                 (INSERT (7 8 9) B
                                                                         (FROM B SELECT regs WHERE (= d 7))))))))
+
+(define my-s-Cmd-nested-create3 '(CREATE A (a b c)
+                                        (INSERT (1 2 3) A
+                                                (INSERT (4 5 6) A
+                                                        (CREATE B (d e f)
+                                                                (INSERT (7 8 9) B
+                                                                        (FROM A SELECT regs WHERE (= a 1))))))))
 #| CASOS MAL FORMADOS |#
 
 ;; se inserta en una tabla inexistente
@@ -79,6 +86,18 @@
                                                         (CREATE B (d e f)
                                                                 (INSERT (7 8 9) B
                                                                         (FROM B SELECT regs WHERE (= g 7))))))))
+(define my-s-Cmd-ill-column3 '(CREATE A (a b c)
+                                        (INSERT (1 2 3) A
+                                                (INSERT (4 5 6) A
+                                                        (CREATE B (d e f)
+                                                                (INSERT (7 8 9) B
+                                                                        (FROM B SELECT regs WHERE (= a 7))))))))
+(define my-s-Cmd-ill-column4 '(CREATE A (a b c)
+                                        (INSERT (1 2 3) A
+                                                (INSERT (4 5 6) A
+                                                        (CREATE B (d e f)
+                                                                (INSERT (7 8 9) B
+                                                                        (FROM A SELECT regs WHERE (= d 7))))))))
 
 #| ==============================
             EJERCICIO 1
@@ -122,8 +141,12 @@
 (test (check-column (parse my-s-Cmd-nested-create2)) #t)
 (test/exn (check-column (parse my-s-Cmd-ill-column)) "Error Estático C: La columna d no está definida en la tabla A")
 (test/exn (check-column (parse my-s-Cmd-ill-column2)) "Error Estático C: La columna g no está definida en la tabla B")
+(test/exn (check-column (parse my-s-Cmd-ill-column3)) "Error Estático C: La columna a no está definida en la tabla B")
+(test/exn (check-column (parse my-s-Cmd-ill-column4)) "Error Estático C: La columna d no está definida en la tabla A")
 
 #| PARTE D |#
+
+
 
 (test (static-check (parse my-s-Cmd)) #t)
 (test (static-check (parse my-s-Cmd2)) #t)
@@ -137,6 +160,8 @@
 (test/exn (static-check (parse my-s-Cmd-ill-arity2)) "Error Estatico B: Registro (7 8 9 10 11) con aridad 5 insertado en tabla B de aridad 4")
 (test/exn (static-check (parse my-s-Cmd-ill-column)) "Error Estático C: La columna d no está definida en la tabla A")
 (test/exn (static-check (parse my-s-Cmd-ill-column2)) "Error Estático C: La columna g no está definida en la tabla B")
+(test/exn (static-check (parse my-s-Cmd-ill-column3)) "Error Estático C: La columna a no está definida en la tabla B")
+(test/exn (static-check (parse my-s-Cmd-ill-column4)) "Error Estático C: La columna d no está definida en la tabla A")
 
 #| ==============================
             EJERCICIO 3
@@ -144,13 +169,19 @@
 
 #| PARTE A |#
 
+
+
 (test (interp-cmd (parse my-s-Cmd) empty-env) '((3 5 4) (2 2 4)))
 (test (interp-cmd (parse my-s-Cmd2) empty-env) '((1 2 3)))
+(test (interp-cmd (parse my-s-Cmd-nested-create2) empty-env) '((7 8 9)))
+(test (interp-cmd (parse my-s-Cmd-nested-create3) empty-env) '((1 2 3)))
 
 #| PARTE B |#
 
 (test (run (parse my-s-Cmd)) '((3 5 4) (2 2 4)))
 (test (run (parse my-s-Cmd2)) '((1 2 3)))
+(test (run (parse my-s-Cmd-nested-create2)) '((7 8 9)))
+(test (run (parse my-s-Cmd-nested-create3)) '((1 2 3)))
 (test/exn (run (parse my-s-Cmd-ill-insertion)) "Error Estatico A1: Registro (1 2 3) insertado en tabla indefinida B")
 (test/exn (run (parse my-s-Cmd-ill-insertion2)) "Error Estatico A1: Registro (7 8 9) insertado en tabla indefinida C")
 (test/exn (run (parse my-s-Cmd-ill-query)) "Error Estatico A2: La tabla consultada B no se encuentra definida")
