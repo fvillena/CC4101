@@ -141,8 +141,8 @@
     [(add l r) (if (const? expr) (num (calc expr)) (add (fold-consts l) (fold-consts r)))]
     [(sub l r) (if (const? expr) (num (calc expr)) (sub (fold-consts l) (fold-consts r)))]
     [(if0 c t f) (if (const? expr) (num (calc expr)) ((if0 (fold-consts c)
-                            (fold-consts t)
-                            (fold-consts f))))]
+                                                           (fold-consts t)
+                                                           (fold-consts f))))]
     [(with x ne b) (with x (fold-consts ne) (fold-consts b))]
     [(fun x b) (fun x (fold-consts b))]
     [(app f a) (app f a)]))
