@@ -1,5 +1,7 @@
 #lang play
 
+;; Código del intérprete extraído desde https://users.dcc.uchile.cl/~etanter/play-interps/
+
 ;; parse :: s-expr -> Expr
 #| where
    <s-expr> ::= <num>
@@ -84,6 +86,7 @@
          | (fun <sym> <expr>)
          | (app <expr> <expr>)
 |#
+;; Tipo inductivo para representar expresiones
 (deftype Expr
   (num n)
   (add l r)
@@ -98,7 +101,8 @@
 ;; --------- [ Parte 1 ] ---------
 
 ;; const? :: Expr -> bool
-
+;; Función que indica si es que la expresión entregada
+;; consiste en sólo constantes numéricas
 (define (const? expr)
   (match expr
     [(num n) #t]
@@ -113,7 +117,7 @@
 
 
 ;; fold-consts :: Expr -> Expr
-
+;; Función que aplica constant folding recursivamente
 (define (fold-consts expr)
   (match expr
     [(num n) (num n)]
@@ -130,9 +134,11 @@
 ;; --------- [ Parte 2 ] ---------
 
 ;; propagate-consts :: Expr -> Expr
-
+;; Función que aplica constant propagation recursivamente
 (define (propagate-consts expr) (propagate-consts-env expr empty-env))
 
+;; propagate-consts-env :: Expr Env -> Expr
+;; Función auxiliar para usar propagate-consts con ambientes
 (define (propagate-consts-env expr env)
   (match expr
     [(num n) (num n)] 
@@ -145,13 +151,11 @@
        (if (const? e) (propagate-consts-env b new-env) (with x (propagate-consts-env e new-env) (propagate-consts-env b new-env))) ]
     [(id x) (env-lookup x env) ]))
 
-;; (propagate-consts (parse '{with {x 23} {fun {y} x}}))
-;; (propagate-consts (parse '{fun {y} {with {x 7} {+ x x}}}))
-
 ;; --------- [ Parte 3 ] ---------
 
 ;; cf&p :: Expr -> Expr
-
+;; Función que aplica constant folding and propagation iterativamente
+;; hasta alcanzar el punto fijo
 (define (cf&p expr)
   (match* ((fold-consts expr) (propagate-consts (fold-consts expr)))
     [(a b) #:when (equal? a b) a]
