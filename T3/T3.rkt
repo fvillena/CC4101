@@ -23,26 +23,6 @@
     [(list 'fun (list x) b) (fun x (parse b))]
     [(list f a) (app (parse f) (parse a))]))
  
-;; subst :: Expr symbol Expr
-(define (subst expr sub-id val)
-  (match expr
-    [(num n) expr]
-    [(add l r) (add (subst l sub-id val)
-                    (subst r sub-id val))]
-    [(sub l r) (sub (subst l sub-id val)
-                    (subst r sub-id val))]
-    [(if0 c t f) (if0 (subst c sub-id val)
-                      (subst t sub-id val)
-                      (subst f sub-id val))]
-    [(with bound-id named-expr body)
-     (with bound-id
-           (subst named-expr sub-id val)
-           (if (symbol=? bound-id sub-id)
-               body
-               (subst body sub-id val)))]
-    [(id x) (if (symbol=? x sub-id) val expr)]))
-
-
 ;; Interface of the Abstract Dada Type (ADT) for  
 ;; keeping track of the deferred substitutions
 
@@ -82,18 +62,14 @@
     [(with x e b) (def new-env (extend-env x (calc e env) env))
        (calc b new-env) ]
     [(id x) (env-lookup x env) ]))
- 
-;; run :: s-expr -> number
-(define (run prog)
-  (calc (parse prog)))
 
 #|
 
    ========================================
                    Tarea 3
    ========================================
-   Nombre: 
-   Rut: 
+   Nombre: Fabián Villena
+   Rut: 18.748.597-5
 
 |#
 
@@ -147,7 +123,7 @@
     [(if0 c t f) (if (const? expr) (num (calc expr empty-env)) ((if0 (fold-consts c)
                                                            (fold-consts t)
                                                            (fold-consts f))))]
-    [(with x ne b) (with x (fold-consts ne) (fold-consts b))]
+    [(with x ne b) (with x (fold-consts ne) b)]
     [(fun x b) (fun x (fold-consts b))]
     [(app f a) (app f a)]))
 
@@ -163,14 +139,20 @@
     [(add l r) (add (propagate-consts-env l env) (propagate-consts-env r env))]
     [(sub l r) (sub (propagate-consts-env l env) (propagate-consts-env r env))]
     [(if0 c t f) (if0 (propagate-consts-env c env) (propagate-consts-env t env) (propagate-consts-env f env))]
+    [(fun x b) (fun x (if (const? b) (calc b env) b))]
+    [(app f a) (app f a)]
     [(with x e b) (def new-env (extend-env x (if (const? e) (num (calc e env)) (id x)) env))
        (if (const? e) (propagate-consts-env b new-env) (with x (propagate-consts-env e new-env) (propagate-consts-env b new-env))) ]
-    [(id x) (env-lookup x env) ]
-    [(fun x b) (fun x (if (const? b) (propagate-consts-env b env) b))]
-    [(app f a) (app f a)]))
+    [(id x) (env-lookup x env) ]))
 
-(propagate-consts (parse '{fun {y} {with {x 7} {+ x x}}}))
+;; (propagate-consts (parse '{with {x 23} {fun {y} x}}))
+;; (propagate-consts (parse '{fun {y} {with {x 7} {+ x x}}}))
 
 ;; --------- [ Parte 3 ] ---------
 
 ;; cf&p :: Expr -> Expr
+
+(define (cf&p expr)
+  (match* ((fold-consts expr) (propagate-consts (fold-consts expr)))
+    [(a b) #:when (equal? a b) a]
+    [(a b) (cf&p b)]))
