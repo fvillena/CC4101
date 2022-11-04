@@ -41,23 +41,47 @@
                body
                (subst body sub-id val)))]
     [(id x) (if (symbol=? x sub-id) val expr)]))
+
+
+;; Interface of the Abstract Dada Type (ADT) for  
+;; keeping track of the deferred substitutions
+
+;; empty-env  :: Env
+;; extend-env :: Symbol Value Env -> Env
+;; env-lookup :: Symbol Env -> Value
+
+;; Implementation of the ADT
+
+;; <env> ::= mtEnv
+;;         | (aEnv <id> <value> <env>)
+(deftype Env
+  (mtEnv)
+  (aEnv id val env))
+
+(define empty-env (mtEnv))
  
+(define extend-env aEnv)
+ 
+(define (env-lookup x env)
+  (match env
+    [(mtEnv) (error 'env-lookup "free identifier: ~a" x)]
+    [(aEnv id val rest) (if (symbol=? id x)
+                            val
+                            (env-lookup x rest))]))
  
 ;; calc :: Expr -> number
-(define (calc expr)
+(define (calc expr env)
   (match expr
     [(num n) n]
-    [(add l r) (+ (calc l) (calc r))]
-    [(sub l r) (- (calc l) (calc r))]
+    [(add l r) (+ (calc l env) (calc r env))]
+    [(sub l r) (- (calc l env) (calc r env))]
     [(if0 c t f)
-     (if (zero? (calc c))
-         (calc t)
-         (calc f))]
-    [(with bound-id named-expr bound-body)
-     (calc (subst bound-body
-                  bound-id
-                  (num (calc named-expr))))]
-    [(id x) (error 'calc "free identifier: ~a" x)]))
+     (if (zero? (calc c env))
+         (calc t env)
+         (calc f env))]
+    [(with x e b) (def new-env (extend-env x (calc e env) env))
+       (calc b new-env) ]
+    [(id x) (env-lookup x env) ]))
  
 ;; run :: s-expr -> number
 (define (run prog)
@@ -111,47 +135,41 @@
     [(app _ _) #f]
     ))
 
+
 ;; fold-consts :: Expr -> Expr
 
-#|(define (fold-consts expr)
-  (if (const? expr) (num (calc expr)) (
-  (match expr
-    [(num n) (num n)]
-    [(id expr) (id expr)]
-    [(add l r) (add (fold-consts l) (fold-consts r))]
-    [(sub l r) (sub (fold-consts l) (fold-consts r))]
-    [(if0 c t f) (if0 (fold-consts c)
-                            (fold-consts t)
-                            (fold-consts f))]
-    [(with x ne b)
-     (with x (fold-consts ne) (fold-consts b))]
-    [(fun x b) (fun x (fold-consts b))]
-    [(app f a) (app (fold-consts f) (fold-consts a))]))))
-|#
-
-#|
-(define (fold-consts expr)
-  (if (const? expr) (num (calc expr)) (fold-consts expr)))
-|#
-
 (define (fold-consts expr)
   (match expr
     [(num n) (num n)]
     [(id expr) (id expr)]
-    [(add l r) (if (const? expr) (num (calc expr)) (add (fold-consts l) (fold-consts r)))]
-    [(sub l r) (if (const? expr) (num (calc expr)) (sub (fold-consts l) (fold-consts r)))]
-    [(if0 c t f) (if (const? expr) (num (calc expr)) ((if0 (fold-consts c)
+    [(add l r) (if (const? expr) (num (calc expr empty-env)) (add (fold-consts l) (fold-consts r)))]
+    [(sub l r) (if (const? expr) (num (calc expr empty-env)) (sub (fold-consts l) (fold-consts r)))]
+    [(if0 c t f) (if (const? expr) (num (calc expr empty-env)) ((if0 (fold-consts c)
                                                            (fold-consts t)
                                                            (fold-consts f))))]
     [(with x ne b) (with x (fold-consts ne) (fold-consts b))]
     [(fun x b) (fun x (fold-consts b))]
     [(app f a) (app f a)]))
 
-
 ;; --------- [ Parte 2 ] ---------
 
 ;; propagate-consts :: Expr -> Expr
 
+(define (propagate-consts expr) (propagate-consts-env expr empty-env))
+
+(define (propagate-consts-env expr env)
+  (match expr
+    [(num n) (num n)] 
+    [(add l r) (add (propagate-consts-env l env) (propagate-consts-env r env))]
+    [(sub l r) (sub (propagate-consts-env l env) (propagate-consts-env r env))]
+    [(if0 c t f) (if0 (propagate-consts-env c env) (propagate-consts-env t env) (propagate-consts-env f env))]
+    [(with x e b) (def new-env (extend-env x (if (const? e) (num (calc e env)) (id x)) env))
+       (if (const? e) (propagate-consts-env b new-env) (with x (propagate-consts-env e new-env) (propagate-consts-env b new-env))) ]
+    [(id x) (env-lookup x env) ]
+    [(fun x b) (fun x (if (const? b) (propagate-consts-env b env) b))]
+    [(app f a) (app f a)]))
+
+(propagate-consts (parse '{fun {y} {with {x 7} {+ x x}}}))
 
 ;; --------- [ Parte 3 ] ---------
 
